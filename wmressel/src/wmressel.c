@@ -63,7 +63,8 @@ void MenuEvent (GtkWidget *, gpointer);
 void on_deactivate(void);
 void create_popup(int);
 GtkWidget *create_screen_submenu (int);
-char *create_submenu_label(XF86VidModeModeInfo *, XF86VidModeModeLine, int);
+char *create_submenu_label(XF86VidModeModeInfo *, XF86VidModeModeLine,
+			   unsigned int);
 void update_res_display(int);
 void show_screen_number(int);
 int get_screen_count(void);
@@ -244,20 +245,24 @@ void create_popup(int selected_screen)
 	GtkWidget *menu_ptr;
 
 	int i;
-	char label_str[14];
+	char label_str[18];
 	GtkWidget *submenu_ptr, *menuitem_ptr;
 	int screen_count = get_screen_count();
 
 	if (screen_count > 1 && !show_only_selected) {
 		menu_ptr = gtk_menu_new();
 		for (i=0; i<screen_count; i++) {
-			submenu_ptr = create_screen_submenu(0);
+			submenu_ptr = create_screen_submenu(i);
 			sprintf(label_str, "Screen %i",i);
 			menuitem_ptr = gtk_menu_item_new_with_label(label_str);
-			gtk_menu_item_set_submenu(GTK_MENU_ITEM (menuitem_ptr), submenu_ptr);
 			gtk_menu_shell_append(GTK_MENU_SHELL (menu_ptr), menuitem_ptr);
 			gtk_widget_show(menuitem_ptr);
-			gtk_widget_show(submenu_ptr);
+			if (submenu_ptr) {
+				gtk_menu_item_set_submenu(
+					GTK_MENU_ITEM (menuitem_ptr),
+					submenu_ptr);
+				gtk_widget_show(submenu_ptr);
+			}
         }
     } else {
 		menu_ptr = create_screen_submenu(selected_screen);
@@ -314,7 +319,8 @@ void on_deactivate(void) {
 /*********************************
 * Create a label for a menu item *
 **********************************/
-char *create_submenu_label(XF86VidModeModeInfo *modeline, XF86VidModeModeLine current, int dotclock)
+char *create_submenu_label(XF86VidModeModeInfo *modeline,
+			   XF86VidModeModeLine current, unsigned int dotclock)
 {
 	char *label_str;
 	char def[3], res[12];
@@ -357,8 +363,11 @@ GtkWidget *create_screen_submenu (int screen)
 	XF86VidModeModeInfo **vm_modelines;
 	XF86VidModeModeLine modeline;
 
-	XF86VidModeGetAllModeLines(display, screen, &vm_count, &vm_modelines);
-	XF86VidModeGetModeLine(display, screen, &dotclock, &modeline);
+	if (!XF86VidModeGetAllModeLines(display, screen, &vm_count,
+					&vm_modelines))
+		return NULL;
+	if (!XF86VidModeGetModeLine(display, screen, &dotclock, &modeline))
+		return NULL;
 
 	menu_ptr = gtk_menu_new();
 
@@ -389,10 +398,15 @@ void update_res_display(int screen)
 {
 	int dotclock;
 	XF86VidModeModeLine modeline;
-	XF86VidModeGetModeLine(display, screen, &dotclock, &modeline);
 
 	/* Clear screen zone */
 	copyXPMArea(76, 12, 35, 29, 14, 13);
+
+	if (!XF86VidModeGetModeLine(display, screen, &dotclock, &modeline)) {
+		BlitString("error", 16, 23);
+		RedrawWindow();
+		return;
+	}
 
 	/* Show resolution */
 	BlitNum(modeline.hdisplay, 41, 14);

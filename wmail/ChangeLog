@@ -1,0 +1,372 @@
+2019-06-21  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/ChangeLog, wmail/README, wmail/configure.ac,
+	wmail/wmailrc-sample: wmail: updated change-log and bumped to 2.3.
+
+2019-06-21  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: fixed use-after-free.  The CleanupNames() function removed the sender-addresses for deleted
+	mails, but did not set the namesChanged flag to true.  This meant
+	that if the ticker was displaying the address of a mail which had
+	been deleted it would continue doing so after the address had been
+	freed.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: handle allocation
+	failures.  Check the return values of some invocations of malloc and strdup and
+	ensure that any NULL's are handled correctly.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c: wmail: fixed possible NULL-pointer dereference
+	in config-parser.  The code calling Tokenize assumed that if it returned true, value
+	would not be NULL.  However, in the case of a line containing no
+	equals sign:   blah that would not be the case.  Changed Tokenize to return false unless
+	id and value are both defined.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: fixed NULL-pointer dereference if
+	opendir(3) fails.  Code was:   if (( dir = opendir( ... )))   {     // ...    }   closedir( dir ); // dir may be NULL Moved closedir(3) inside if-block.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: use continue instead of goto.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.c, wmail/src/config.c, wmail/src/wmail.c: wmail:
+	formatting improvements.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.h: wmail: debug macro fixes.
+
+2019-06-13  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/README, wmail/src/config.c, wmail/wmailrc-sample: wmail:
+	fixed config typo.  The old spelling is still supported.
+
+2019-06-12  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/ChangeLog, wmail/README, wmail/configure.ac,
+	wmail/wmailrc-sample: wmail: updated change-log and bumped to 2.2.
+
+2019-06-12  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: removed superfluous continue.
+
+2019-06-12  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/README: wmail: fixed error in build instructions.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: removed commented-out variable.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: POSIX doesn't have a "t" mode flag for
+	fopen(3).
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: formatting fixes.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: strip leading white-space when doing
+	skip-name comparisons.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.h: wmail: dropped unused enum values.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: use realloc(3) and
+	handle allocation failures.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c: wmail: fixed memory leaks in skip-names.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/README, wmail/src/config.c, wmail/src/config.h,
+	wmail/src/wmail.c: wmail: added command-line option to specify a
+	different config-file.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: parse command-line arguments before
+	reading config-file.  Fixes warnings about config and check-sum files when using --help
+	and --version.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.h, wmail/src/config.c, wmail/src/wmail.c: wmail:
+	removed hard-coded string lengths.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c: wmail: use continues rather than if-else chain
+	to improve readability.
+
+2019-06-10  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: added option index enum and used
+	designated initializers for options.
+
+2019-06-09  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: removed hard-coded
+	buffer size.
+
+2019-06-09  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.ac, wmail/src/common.h, wmail/src/config.c: wmail:
+	use stdbool.h if available.
+
+2019-06-09  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.c, wmail/src/common.h, wmail/src/config.c,
+	wmail/src/config.h, wmail/src/wmail.c, wmail/wmailrc-sample: wmail:
+	more version and copyright updates.
+
+2019-06-09  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/README, wmail/src/wmail.c: wmail: fixed some typo's.
+
+2019-06-09  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/Makefile.am: wmail: only include one set of XPM's among
+	wmail's sources.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/ChangeLog, wmail/README, wmail/configure.ac: wmail: bumped
+	to 2.1.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/ChangeLog: wmail: added new ChangeLog.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/COPYING: wmail: updated the copyright notices.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/README: wmail: updated contact details in README.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/ChangeLog.old, wmail/Makefile.am, wmail/README: wmail: moved
+	old change-log to a separate file.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.h: wmail: define debug macros as empty if debug
+	is not enabled.
+
+2019-06-06  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.c, wmail/src/common.h: wmail: only one DEBUG
+	macro is ever defined.
+
+2019-06-05  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: change "!stat(...) == 0" to "stat(...)
+	== -1"
+
+2019-06-04  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.c: wmail: refactored MakePathName: one malloc;
+	one snprintf instead of two memcpys.
+
+2019-06-03  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/.gitignore, wmail/Makefile.am, wmail/Makefile.in,
+	wmail/autogen, wmail/configure.ac, wmail/src/Makefile.am,
+	wmail/src/Makefile.in: wmail: use automake.
+
+2019-06-04  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/{configure.in => configure.ac}: wmail: renamed configure.in
+	to configure.ac.
+
+2019-06-05  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in, wmail/src/wmail.c: wmail: check for
+	libdockapp/dockapp.h and fall back to dockapp.h.
+
+2019-06-04  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in, wmail/src/Makefile.in: wmail: use pkg-config
+	for X11 and dockapp.
+
+2019-06-05  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: use DA_VERSION to determine the correct
+	type for DAMakePixmapFromData parameters.
+
+2019-06-04  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/Makefile.in, wmail/README: wmail: no longer install into or
+	uninstall from $HOME.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: added breaks and explicit fall-through
+	comments to switches.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: declare enum variable with the right
+	type.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: fixed warnings about unused parameters.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: fixed comparisons between signed and
+	unsigned.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c: wmail: use designated initializers to define
+	config.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in, wmail/src/config.c, wmail/src/wmail.c: wmail:
+	strcasecmp and strncasecmp are properly declared in strings.h.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in: wmail: extra debug compiler flags.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: white-space fixes.
+
+2019-05-28  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: allow for multiple white-space
+	characters between name and address.
+
+2019-05-28  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: keep track of buffer lengths and avoid
+	repeated strlen calls.
+
+2019-05-28  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in, wmail/src/common.c, wmail/src/config.c,
+	wmail/src/wmail.c: wmail: strlen returns size_t.
+
+2019-06-04  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/.gitignore, wmail/configure.in, wmail/src/Makefile.in,
+	wmail/src/common.c, wmail/src/config.c, wmail/src/wmail.c: wmail:
+	use AC_CONFIG_HEADERS to generate config.h.
+
+2019-06-01  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in, wmail/src/Makefile.in: wmail: use CPPFLAGS.
+
+2019-06-04  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/configure.in: wmail: don't clobber CFLAGS.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: add static to
+	declarations of lots of variables and functions.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.h, wmail/src/wmail.c: wmail: added signal-handler
+	for SIGINT and SIGTERM.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: skip leading white-space in From:
+	headers.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: DAMakePixmapFromData expects an unsigned
+	short pointer.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: replaced SIGALRM handler with DA timer
+	call-back.  The application was doing a lot of work in a signal-handler.  This
+	was not re-entrant and could interact badly with X.  Since the DA
+	event-loop supports a timer call-back use that instead.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: fix prototypes of
+	functions accepting no parameters.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: use calloc, instead of malloc + memset.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/wmail.c: wmail: fix memory leaks.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/wmail.c: wmail: FileNameConcat does exactly the same
+	thing as MakePathName: get rid of it.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/common.c, wmail/src/config.c, wmail/src/wmail.c: wmail:
+	handle allocation failures.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/src/config.c, wmail/src/config.h, wmail/src/wmail.c: wmail:
+	consistent 4-column indentation with 8-character tabs.
+
+2019-05-27  Jeremy Sowden <jeremy@azazel.net>
+
+	* wmail/.gitignore: wmail: added .gitignore.
+
+2017-02-27  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmail/src/wmail.c: wmail: Specify libdockapper header file
+	directory.
+
+2017-02-27  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmail/src/Makefile.in: wmail: Link shared lbraries in correct
+	order.
+
+2017-02-27  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmail/configure: wmail: Remove autogenerated configure file from
+	git.
+
+2016-12-23  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmail/README, wmail/configure, wmail/src/common.c,
+	wmail/src/common.h, wmail/src/config.c, wmail/src/config.h,
+	wmail/src/wmail.c: Remove trailing whitespace in recently added
+	dockapps.
+
+2016-11-27  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmail: Add version 2.0 to repository.  From
+
+	http://http.debian.net/debian/pool/main/w/wmail/wmail_2.0.orig.tar.gz
+

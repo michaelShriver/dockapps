@@ -41,6 +41,31 @@
 #include "include/mixer-oss.h"
 #include "include/mixer-alsa.h"
 
+void (*mixer_init)(const char *mixer_device,
+                   bool verbose,
+                   const char *exclude[]);
+bool (*mixer_is_changed)(void);
+int (*mixer_get_channel_count)(void);
+int (*mixer_get_channel)(void);
+const char *(*mixer_get_channel_name)(void);
+const char *(*mixer_get_short_name)(void);
+void (*mixer_set_channel)(int channel);
+void (*mixer_set_channel_rel)(int delta_channel);
+float (*mixer_get_volume)(void);
+void (*mixer_set_volume)(float volume);
+void (*mixer_set_volume_rel)(float delta_volume);
+float (*mixer_get_balance)(void);
+void (*mixer_set_balance)(float balance);
+void (*mixer_set_balance_rel)(float delta_balance);
+void (*mixer_toggle_mute)(void);
+void (*mixer_toggle_rec)(void);
+bool (*mixer_is_muted)(void);
+bool (*mixer_is_stereo)(void);
+bool (*mixer_is_rec)(void);
+bool (*mixer_can_rec)(void);
+bool (*is_exclude)(const char *short_name,
+                   const char *exclude[]);
+void (*mixer_tick)(void);
 
 static Display *display;
 static bool button_pressed = false;
@@ -106,7 +131,7 @@ int main(int argc, char **argv)
     display_height = (float)DisplayHeight(display, DefaultScreen(display)) / 2.0;
 
     dockapp_init(display, have_randr);
-    new_window("wmix", 64, 64);
+    new_window("wmix", 64, 64, argc, argv);
     new_osd(60);
 
     if (config.mmkeys)

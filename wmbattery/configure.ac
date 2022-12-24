@@ -1,7 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(wmbattery.c, 2.51)
+AC_INIT([wmbattery], [2.54], [wmaker-dev@googlegroups.com])
 AC_CONFIG_HEADER(config.h)
-
 AC_CONFIG_AUX_DIR(autoconf)
 
 dnl Checks for the apm device other than /proc/apm.
@@ -24,15 +23,25 @@ if test "x${x_libraries}" != "x"; then
 fi
 
 dnl Checks for libraries.
-AC_CHECK_LIB(X11, XOpenDisplay)
-AC_CHECK_LIB(Xext, XShapeCombineMask)
-AC_CHECK_LIB(Xpm, XpmReadFileToPixmap)
+PKG_CHECK_MODULES([Xlib], [x11])
+PKG_CHECK_MODULES([Xext], [xext])
+PKG_CHECK_MODULES([libXpm], [xpm])
 AC_CHECK_LIB(apm, apm_read)
+AC_ARG_ENABLE(hal, AS_HELP_STRING([--enable-hal], [enable hal]),
+              [], [enable_hal=no])
+AS_IF([test x$enable_hal != xno], [
+  PKG_CHECK_MODULES([hal], [hal])
+  AC_SUBST(USE_HAL, 1)
+])
+AC_ARG_ENABLE(upower, AS_HELP_STRING([--disable-upower], [disable upower]),
+              [], [enable_upower=yes])
+AS_IF([test x$enable_upower != xno], [
+  PKG_CHECK_MODULES([upower], [upower-glib])
+  AC_SUBST(USE_UPOWER, 1)
+])
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(X11/xpm.h)
-AC_CHECK_HEADERS(X11/extensions/shape.h)
 AC_CHECK_HEADERS(getopt.h)
 dnl FreeBSD needs apm_bios.h
 AC_CHECK_HEADERS(machine/apm_bios.h)
@@ -47,4 +56,4 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(strdup)
 
-AC_OUTPUT(makeinfo:autoconf/makeinfo.in)
+AC_OUTPUT(Makefile)

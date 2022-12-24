@@ -65,7 +65,7 @@ struct connection_state {
 	/*@null@ */ void *xcred;
 #endif
 	char unprocessed[BUF_SIZE];
-	Pop3 pc;					/* mailbox handle for debugging messages */
+	Pop3 *pc;					/* mailbox handle for debugging messages */
 };
 
 /* gotta do our own line buffering, sigh */
@@ -200,7 +200,7 @@ getline_from_buffer(char *readbuffer, char *linebuffer, int linebuflen)
 		/* return the length of the line */
 	}
 	if (i < 0 || i > linebuflen) {
-		DM((Pop3) NULL, DEBUG_ERROR, "bork bork bork!: %d %d\n", i,
+		DM((Pop3 *) NULL, DEBUG_ERROR, "bork bork bork!: %d %d\n", i,
 		   linebuflen);
 	}
 	return i;
@@ -229,10 +229,12 @@ tlscomm_expect(struct connection_state *scs,
 #ifdef USE_GNUTLS
 			if (scs->tls_state) {
 				/* BUF_SIZE - 1 leaves room for trailing \0 */
-				thisreadbytes =
-					gnutls_read(scs->tls_state,
-								&scs->unprocessed[buffered_bytes],
-								BUF_SIZE - 1 - buffered_bytes);
+				do {
+					thisreadbytes =
+						gnutls_read(scs->tls_state,
+									&scs->unprocessed[buffered_bytes],
+									BUF_SIZE - 1 - buffered_bytes);
+				} while (thisreadbytes == GNUTLS_E_AGAIN);
 				if (thisreadbytes < 0) {
 					handle_gnutls_read_error(thisreadbytes, scs);
 					return 0;
@@ -384,9 +386,9 @@ static int tls_compare_certificates(const gnutls_datum_t * peercert)
 
 	fd1 = fopen(certificate_filename, "r");
 	if (fd1 == NULL) {
+		free(b64_data_data);
 		return 0;
 	}
-
 	b64_data.size = fread(b64_data.data, 1, b64_data.size, fd1);
 	fclose(fd1);
 
@@ -539,7 +541,7 @@ tls_check_certificate(struct connection_state *scs,
 	return;
 }
 
-struct connection_state *initialize_gnutls(intptr_t sd, char *name, Pop3 pc,
+struct connection_state *initialize_gnutls(intptr_t sd, char *name, Pop3 *pc,
 										   const char *remote_hostname)
 {
 	static int gnutls_initialized;
@@ -595,6 +597,8 @@ struct connection_state *initialize_gnutls(intptr_t sd, char *name, Pop3 pc,
 			}
 		}
 
+		gnutls_server_name_set(scs->tls_state, GNUTLS_NAME_DNS,
+							   remote_hostname, strlen(remote_hostname));
 		gnutls_cred_set(scs->tls_state, GNUTLS_CRD_CERTIFICATE,
 						scs->xcred);
 		gnutls_transport_set_ptr(scs->tls_state,
@@ -659,7 +663,7 @@ void handle_gnutls_read_error(int readbytes, struct connection_state *scs)
 /* declare stubs when tls isn't compiled in */
 struct connection_state *initialize_gnutls(UNUSED(intptr_t sd),
 										   UNUSED(char *name),
-										   UNUSED(Pop3 pc),
+										   UNUSED(Pop3 *pc),
 										   UNUSED(const char
 												  *remote_hostname))
 {
@@ -672,7 +676,7 @@ struct connection_state *initialize_gnutls(UNUSED(intptr_t sd),
 /* either way: */
 struct connection_state *initialize_unencrypted(int sd,
 												/*@only@ */ char *name,
-												Pop3 pc)
+												Pop3 *pc)
 {
 	struct connection_state *ret = malloc(sizeof(struct connection_state));
 	assert(sd >= 0);

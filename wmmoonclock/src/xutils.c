@@ -41,16 +41,25 @@
 
 
 /*
+ *   Global variable
+ */
+Display		*display;
+Window          Root;
+Window          iconwin, win;
+int             screen;
+int             DisplayDepth;
+
+/*
  *   X11 Variables
  */
-int		x_fd;
-XSizeHints	mysizehints;
-XWMHints	mywmhints;
-Pixel		back_pix, fore_pix;
-char		*Geometry = "";
-GC		NormalGC;
-XpmIcon		wmgen;
-Pixmap		pixmask;
+static int		x_fd;
+static XSizeHints	mysizehints;
+static XWMHints         mywmhints;
+static Pixel		back_pix, fore_pix;
+static char		*Geometry = "";
+static GC		NormalGC;
+static XpmIcon		wmgen;
+static Pixmap		pixmask;
 
 
 

@@ -1,0 +1,88 @@
+wmcube 1.0.2
+---------------------------------------------------------------
+Author: Cezary M. Kruk
+        c.kruk@bigfoot.com
+        http://linux-bsd-unix.strefa.pl
+
+Contributors:
+        Doug Torrance <dtorrance@piedmont.edu>
+
+wmCube 0.98
+---------------------------------------------------------------
+Author: Robert Kling
+        robkli-8@student.luth.se
+        http://boombox.campus.luth.se
+
+Contributors:
+        Thorsten Jens <thodi@et-inf.fho-emden.de>
+        Jakob Borg <email-adress goes here>
+        Dan Price <dp@rampant.org>
+        Brian Joseph Czapiga <rys@godsey.net>
+        Tai-hwa Liang <avatar@mmlab.cse.yzu.edu.tw>
+        Jared Smolens <jsmolens+@andrew.cmu.edu>
+
+Description
+---------------------------------------------------------------
+wmcube is a dockapp displaying a realtime rotating 3D object
+(plugin) together with the current CPU load.  The speed of the
+rotation depends on the CPU load.
+
+Commands
+---------------------------------------------------------------
+Display help:
+
+    $ wmcube -h
+
+Run cube.wmc plugin from the current or default directory:
+
+    $ wmcube -o cube.wmc &
+
+Run random plugin from the default directory:
+
+    $ wmcube &
+
+Run random plugin from the current directory:
+
+    $ wmcube -o . &
+
+Run sample.wmc plugin from the selected directory:
+
+    $ wmcube -o ~/myplugins/sample.wmc &
+
+(The default directory is set to /usr/share/wmcube.)
+
+Mouse actions
+---------------------------------------------------------------
+Display the next plugin (works with the directories including
+the plugins):
+
+    click the center of the dockapp
+
+Zoom the plugin out or in:
+
+    click - or +
+
+Hide or show CPU usage:
+
+    click XX%
+
+Files
+---------------------------------------------------------------
+3D-objects  3D object files (plugins)
+COPYING     GNU General Public License Version 3
+CHANGES     description of the changes
+INSTALL     installation instructions
+README      this file
+THANKS      my thanks to other people
+
+Bugs
+---------------------------------------------------------------
+If you discover any bugs in this software, please send a
+bugreport to c.kruk@bigfoot.com and describe the problem as
+detailed as you can.
+
+Copyright
+---------------------------------------------------------------
+wmcube (C) 2014-2016 by Cezary M. Kruk, Wrocław, Poland
+wmCube (C) 2000-2001 by Robert Kling, Lulea, Sweden
+

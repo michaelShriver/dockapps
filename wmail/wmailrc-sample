@@ -1,6 +1,6 @@
 #-*-shell-script-*-############################################################
 #
-# .wmailrc - wmail v2.0 configuration file
+# .wmailrc - wmail v2.3 configuration file
 # note: cmd-line options always overide the settings in this file unless you
 # force runtime reconfiguration by clicking on the docklets display area
 #
@@ -40,7 +40,7 @@ Mail.ShowOnlyNew = Yes
 
 # mail-check interval in seconds
 # integer value, default: 1
-Mail.CheckIntervall = 5
+Mail.CheckInterval = 5
 
 # setup the ticker-line: allowed values are: Address | NickName | FamilyName
 # enum value, default: Address

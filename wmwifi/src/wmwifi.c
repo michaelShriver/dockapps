@@ -65,6 +65,9 @@ struct theme {
 struct theme tcur;
 struct theme blgt;
 struct wifi lwfi;
+time_t last_update = 0;
+time_t last_swap = 0;
+time_t now = 0;
 
 /* prototypes */
 static void update(struct wifi *wfi);
@@ -122,36 +125,36 @@ int main(int argc, char **argv)
     draw_text("link", 32, 47, False);
 
     /* Main loop */
-    for (i = 0;; i++) {
-	/* CHANGED */
-	if (dockapp_nextevent_or_timeout(&event, update_interval * 100)) {
-	    /* Next Event */
-	    switch (event.type) {
-	    case ButtonPress:
-		bevent = (XButtonPressedEvent *) & event;
-		switch (bevent->button & 0xff) {
-		case Button1:
-		    scroll = (scroll) ? False : True;
-		    count = 0;
-		    break;
-		case Button2:
-		    next_if(&wfi);
-		    break;
-		case Button3:
-		    switch_interface(&wfi);
-		    break;
-		}
-		break;
-	    default:		/* make gcc happy */
-		break;
-	    }
-	} else {
-	    /* Time Out */
-	    update(&wfi);
-	}
-    }
+    while (1) {
+	if (time(NULL) != last_update)
+		    update(&wfi);
 
-    return 0;
+	    while (XPending(display)) {
+		    XNextEvent(display, &event);
+
+		    switch (event.type) {
+		    case ButtonPress:
+			    bevent = (XButtonPressedEvent *) & event;
+			    switch (bevent->button & 0xff) {
+			    case Button1:
+				    scroll = (scroll) ? False : True;
+				    count = 0;
+				    break;
+			    case Button2:
+				    next_if(&wfi);
+				    break;
+			    case Button3:
+				    switch_interface(&wfi);
+				    break;
+			    }
+			    break;
+		    default:		/* make gcc happy */
+			    break;
+		    }
+	    }
+	    usleep(update_interval*1000000L);
+    }
+	return 0;
 }
 
 static void do_theme(struct theme thm)
@@ -199,6 +202,8 @@ static void update(struct wifi *wfi)
     extern int count;
     //char *str = calloc(1, sizeof(wfi->ifname) + sizeof(wfi->essid) + 3);
     char str[512];
+
+	now = time(NULL);
 
     /* get current link level from /proc/net/wireless */
     copy_wifi(&lwfi, wfi);
@@ -259,12 +264,15 @@ static void update(struct wifi *wfi)
 	    if (count > (strlen(str) * 3))
 		count = 1;
 	} else {
-	    if (count < 50)
-		sw = 1;
-	    if (count >= 50)
-		sw = 2;
-	    if (count == 100)
-		count = -1;
+		int diff = now - last_swap;
+		/* swap between ifname and essid every 2 seconds */
+		if (diff <= 2)
+			sw = 1;
+		else if ((diff > 2) && (diff <= 4))
+			sw = 2;
+		else
+			last_swap = now;
+
 	    switch (sw) {
 	    case 1:
 		dockapp_copyarea(display_link, pixmap, 0, 0, 58, 12, 0, 0);
@@ -288,6 +296,7 @@ static void update(struct wifi *wfi)
 	/* show */
     }
     dockapp_copy2window(pixmap);
+	time(&last_update);
 }
 static void refresh(struct theme thm)
 {

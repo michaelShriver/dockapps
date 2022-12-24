@@ -65,6 +65,7 @@
  /* X11 Variables */
 /*****************/
 
+Display *display;
 Window Root;
 int screen;
 int x_fd;
@@ -119,8 +120,8 @@ void parse_rcfile(const char *filename, rckeys * keys)
 	if (fp) {
 		while (fgets(temp, 128, fp)) {
 			key = 0;
-			q = strdup(temp);
-			q = strtok(q, tokens);
+			char *t = strdup(temp);
+			q = strtok(t, tokens);
 			while (key >= 0 && keys[key].label) {
 				if ((!strcmp(q, keys[key].label))) {
 					p = strstr(temp, keys[key].label);
@@ -134,7 +135,7 @@ void parse_rcfile(const char *filename, rckeys * keys)
 				} else
 					key++;
 			}
-			free(q);
+			free(t);
 		}
 		fclose(fp);
 	}

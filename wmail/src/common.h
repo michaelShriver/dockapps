@@ -2,8 +2,9 @@
 // common.h
 // common defines and typedefs, part of wmail
 //
-// Copyright 2000~2002, Sven Geisenhainer <sveng@informatik.uni-jena.de>.
-// All rights reserved.
+// Copyright 2000-2002, Sven Geisenhainer <sveng@informatik.uni-jena.de>.
+// Copyright 2016-2017, Doug Torrance <dtorrance@piedmont.edu>.
+// Copyright 2019, Jeremy Sowden <jeremy@azazel.net>.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
@@ -53,19 +54,25 @@
 // filename of the config-file
 #define WMAIL_RC_FILE        ".wmailrc"
 
-#define WMAIL_NAME           "wmail"
-#define WMAIL_VERSION        "wmail v2.0 (C) 2000~2002 Sven Geisenhainer <sveng@informatik.uni-jena.de>"
-
 #define WMAIL_READSTATUS     "O"
 
 ///////////////////////////////////////////////////////////////////////////////
 // typedefs
 
-#if !defined(__cplusplus) && !defined(c_plusplus)
-typedef enum {
-    false = 0,
-    true = 1
-} bool;
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>
+#else
+# ifndef HAVE__BOOL
+#  ifdef __cplusplus
+typedef bool _Bool;
+#  else
+#   define _Bool signed char
+#  endif
+# endif
+# define bool _Bool
+# define false 0
+# define true 1
+# define __bool_true_false_are_defined 1
 #endif
 
 
@@ -76,18 +83,22 @@ void ABORT( const char *fmt, ... );
 void WARNING( const char *fmt, ... );
 char *MakePathName( const char *dir, const char *file );
 
-#if defined(DEBUG) || defined(DEBUG2) || defined(_DEBUG)
+#ifdef DEBUG
 
 void TRACE( const char *fmt, ... );
-#define ASSERT( EXPR ) ((void)(EXPR ? 0 : ABORT( "%s(%i): Assertion failed: \"%s\"\n", __FILE__, __LINE__, #EXPR )))
-#define VERIFY( EXPR ) ASSERT( EXPR )
+#define ASSERT( EXPR ) do {                          \
+    if ( !(EXPR) )                                   \
+	ABORT( "%s(%i): Assertion failed: \"%s\"\n", \
+	       __FILE__, __LINE__, #EXPR );          \
+} while (0)
 
 #else
 
-#define TRACE 0 && // hopefully rejected by the optimizing compiler (as gcc does...)
-#define ASSERT(EXPR) ((void)0)
-#define VERIFY(EXPR) (EXPR)
+#define TRACE( fmt... )
+#define ASSERT( EXPR )
 
 #endif
+
+#define PREFIX_MATCHES(S, P, CS) ( CS ? strncmp : strncasecmp ) ( (S), (P), sizeof (P) - 1) == 0
 
 #endif

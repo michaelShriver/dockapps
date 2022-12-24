@@ -2,8 +2,9 @@
 // common.c
 // common defines and typedefs, part of wmail
 //
-// Copyright 2000~2002, Sven Geisenhainer <sveng@informatik.uni-jena.de>.
-// All rights reserved.
+// Copyright 2000-2002, Sven Geisenhainer <sveng@informatik.uni-jena.de>.
+// Copyright 2016-2017, Doug Torrance <dtorrance@piedmont.edu>.
+// Copyright 2019, Jeremy Sowden <jeremy@azazel.net>.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
@@ -28,14 +29,21 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+#ifdef HAVE_CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#include "../config.h"
+#define CONFIG_H_INCLUDED
+#endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+
 #include "common.h"
 
-
-#if defined(DEBUG) || defined(DEBUG2) || defined(_DEBUG)
+#ifdef DEBUG
 void TRACE( const char *fmt, ... )
 {
     va_list args;
@@ -70,19 +78,27 @@ void WARNING( const char *fmt, ... )
 
 char *MakePathName( const char *dir, const char *file )
 {
+    size_t dir_len  = strlen( dir );
+    size_t file_len = strlen( file );
+
+    size_t len;
+    const char *fmt;
+
     char *fullName;
-    int len1 = strlen( dir );
-    int len2 = strlen( file );
 
-    if( dir[len1-1] != '/' )
-	fullName = malloc( len1 + len2 + 2 );
+    if( dir[dir_len - 1] != '/' )
+    {
+	len = dir_len + 1 + file_len + 1;
+	fmt = "%s/%s";
+    }
     else
-	fullName = malloc( len1 + len2 + 1 );
+    {
+	len = dir_len + file_len + 1;
+	fmt = "%s%s";
+    }
 
-    memcpy( fullName, dir, len1 );
-    if( dir[len1-1] != '/' )
-	fullName[len1++] = '/';
-    memcpy( fullName + len1, file, len2 + 1 );
-
+    fullName = malloc( len );
+    if( fullName != NULL )
+	snprintf( fullName, len, fmt, dir, file );
     return fullName;
 }

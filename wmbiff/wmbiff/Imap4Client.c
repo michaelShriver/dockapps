@@ -55,16 +55,16 @@ static struct fdmap_struct {
 	/*@owned@ */ struct connection_state *cs;
 } fdmap[FDMAP_SIZE];
 
-static void ask_user_for_password( /*@notnull@ */ Pop3 pc,
+static void ask_user_for_password( /*@notnull@ */ Pop3 *pc,
 								  int bFlushCache);
 
 /* authentication callbacks */
 #ifdef HAVE_GCRYPT_H
-static int authenticate_md5( /*@notnull@ */ Pop3 pc,
+static int authenticate_md5( /*@notnull@ */ Pop3 *pc,
 							struct connection_state *scs,
 							const char *capabilities);
 #endif
-static int authenticate_plaintext( /*@notnull@ */ Pop3 pc,
+static int authenticate_plaintext( /*@notnull@ */ Pop3 *pc,
 								  struct connection_state *scs,
 								  const char *capabilities);
 
@@ -73,9 +73,9 @@ static int authenticate_plaintext( /*@notnull@ */ Pop3 pc,
 static struct imap_authentication_method {
 	const char *name;
 	/* callback returns 1 if successful, 0 if failed */
-	int (*auth_callback) ( /*@notnull@ */ Pop3 pc,
-						  struct connection_state * scs,
-						  const char *capabilities);
+	int (*auth_callback) ( /*@notnull@ */ Pop3 *pc,
+						 struct connection_state * scs,
+						 const char *capabilities);
 } auth_methods[] = {
 	{
 #ifdef HAVE_GCRYPT_H
@@ -89,7 +89,7 @@ static struct imap_authentication_method {
 /* recover a socket from the connection cache */
 /*@null@*/
 /*@dependent@*/
-static struct connection_state *state_for_pcu(Pop3 pc)
+static struct connection_state *state_for_pcu(Pop3 *pc)
 {
 	char *connection_id;
 	struct connection_state *retval = NULL;
@@ -108,7 +108,7 @@ static struct connection_state *state_for_pcu(Pop3 pc)
 }
 
 /* bind to the connection cache */
-static void bind_state_to_pcu(Pop3 pc,
+static void bind_state_to_pcu(Pop3 *pc,
 							  /*@owned@ */ struct connection_state *scs)
 {
 	char *connection_id;
@@ -156,7 +156,7 @@ struct connection_state *unbind(
 /* creates a connection to the server, if a matching one doesn't exist. */
 /* *always* returns null, just declared this wasy to match other protocols. */
 /*@null@*/
-FILE *imap_open(Pop3 pc)
+FILE *imap_open(Pop3 *pc)
 {
 	static int complained_already;	/* we have to succeed once before
 									   complaining again about failure */
@@ -200,6 +200,7 @@ FILE *imap_open(Pop3 pc)
 			   mailboxes more often while remote things are
 			   unavailable or disconnected.  */
 		}
+		free(connection_name);
 		return NULL;
 	}
 
@@ -258,7 +259,7 @@ FILE *imap_open(Pop3 pc)
 	   encrypted session. */
 	tlscomm_printf(scs, "a000 CAPABILITY\r\n");
 	if (tlscomm_expect(scs, "* CAPABILITY", capabilities, BUF_SIZE) == 0) {
-		IMAP_DM(pc, DEBUG_ERROR, "unable to query capability string");
+		IMAP_DM(pc, DEBUG_ERROR, "unable to query capability string\n");
 		goto communication_failure;
 	}
 
@@ -287,9 +288,9 @@ FILE *imap_open(Pop3 pc)
 
 }
 
-void imap_cacheHeaders( /*@notnull@ */ Pop3 pc);
+void imap_cacheHeaders( /*@notnull@ */ Pop3 *pc);
 
-int imap_checkmail( /*@notnull@ */ Pop3 pc)
+int imap_checkmail( /*@notnull@ */ Pop3 *pc)
 {
 	/* recover connection state from the cache */
 	struct connection_state *scs = state_for_pcu(pc);
@@ -358,7 +359,7 @@ int imap_checkmail( /*@notnull@ */ Pop3 pc)
 }
 
 void
-imap_releaseHeaders(Pop3 pc __attribute__ ((unused)), struct msglst *h)
+imap_releaseHeaders(Pop3 *pc __attribute__((unused)), struct msglst *h)
 {
 	assert(h != NULL);
 	/* allow the list to be released next time around */
@@ -374,7 +375,7 @@ imap_releaseHeaders(Pop3 pc __attribute__ ((unused)), struct msglst *h)
 	}
 }
 
-void imap_cacheHeaders( /*@notnull@ */ Pop3 pc)
+void imap_cacheHeaders( /*@notnull@ */ Pop3 *pc)
 {
 	struct connection_state *scs = state_for_pcu(pc);
 	char *msgid;
@@ -463,6 +464,7 @@ void imap_cacheHeaders( /*@notnull@ */ Pop3 pc)
 				pc->headerCache = m;
 				pc->headerCache->in_use = 0;	/* initialize that it isn't locked */
 			} else {
+				free(m);
 				IMAP_DM(pc, DEBUG_ERROR, "error fetching: %s", hdrbuf);
 			}
 			if (!fetch_command_done) {
@@ -479,7 +481,7 @@ void imap_cacheHeaders( /*@notnull@ */ Pop3 pc)
 
 /* a client is asking for the headers, hand em a reference, increase the
    one-bit reference counter */
-struct msglst *imap_getHeaders( /*@notnull@ */ Pop3 pc)
+struct msglst *imap_getHeaders( /*@notnull@ */ Pop3 *pc)
 {
 	if (pc->headerCache == NULL)
 		imap_cacheHeaders(pc);
@@ -489,25 +491,31 @@ struct msglst *imap_getHeaders( /*@notnull@ */ Pop3 pc)
 }
 
 /* parse the config line to setup the Pop3 structure */
-int imap4Create( /*@notnull@ */ Pop3 pc, const char *const str)
+int imap4Create( /*@notnull@ */ Pop3 *pc, const char *const str)
 {
 	int i;
 	int matchedchars;
 	/* special characters aren't allowed in hostnames, rfc 1034 */
 	const char *regexes[] = {
 		// type : username     :   password @ hostname (/ name)?(:port)?
-		".*imaps?:([^: ]{1,256}):([^@]{0,32})@([A-Za-z1-9][-A-Za-z0-9_.]+)(/(\"[^\"]+\")|([^:@ ]+))?(:[0-9]+)?(  *([CcAaPp][-A-Za-z5 ]*))?$",
-		".*imaps?:([^: ]{1,256}) ([^ ]{1,32}) ([A-Za-z1-9][-A-Za-z0-9_.]+)(/(\"[^\"]+\")|([^: ]+))?( [0-9]+)?(  *([CcAaPp][-A-Za-z5 ]*))?$",
+               ".*imaps?:([^: ]{1,255}):([^@]{0,32})@([A-Za-z1-9][-A-Za-z0-9_.]+)(/(\"[^\"]+\")|([^:@ ]+))?(:[0-9]+)?(  *([CcAaPp][-A-Za-z5 ]*))?$",
+               ".*imaps?:([^: ]{1,255}) ([^ ]{1,32}) ([A-Za-z1-9][-A-Za-z0-9_.]+)(/(\"[^\"]+\")|([^: ]+))?( [0-9]+)?(  *([CcAaPp][-A-Za-z5 ]*))?$",
 		NULL
 	};
 	char *unaliased_str;
+	/*
+	 * regulo_atoi expects a pointer-to-int and pop_imap.serverPort is a
+	 * uint16_t, so &pop_imap.serverPort is not compatible and we need to use an
+	 * int temporary variable to avoid endianness problems.
+	 */
+	int serverPort;
 
 	struct regulo regulos[] = {
 		{1, PCU.userName, regulo_strcpy},
 		{2, PCU.password, regulo_strcpy},
 		{3, PCU.serverName, regulo_strcpy},
 		{4, pc->path, regulo_strcpy_skip1},
-		{7, &PCU.serverPort, regulo_atoi},
+		{7, &serverPort, regulo_atoi},
 		{9, PCU.authList, regulo_strcpy_tolower},
 		{0, NULL, NULL}
 	};
@@ -536,7 +544,7 @@ int imap4Create( /*@notnull@ */ Pop3 pc, const char *const str)
 	}
 
 	/* defaults */
-	PCU.serverPort = (PCU.dossl != 0) ? 993 : 143;
+	serverPort = (PCU.dossl != 0) ? 993 : 143;
 	PCU.authList[0] = '\0';
 
 	/* argh, str and pc->path are aliases, so we can't just write the default
@@ -559,6 +567,8 @@ int imap4Create( /*@notnull@ */ Pop3 pc, const char *const str)
 		return -1;
 	}
 
+	PCU.serverPort = serverPort;
+
 	PCU.password_len = strlen(PCU.password);
 	if (PCU.password[0] == '\0') {
 		PCU.interactive_password = 1;
@@ -571,8 +581,8 @@ int imap4Create( /*@notnull@ */ Pop3 pc, const char *const str)
 	free(unaliased_str);
 
 	IMAP_DM(pc, DEBUG_INFO, "userName= '%s'\n", PCU.userName);
-	IMAP_DM(pc, DEBUG_INFO, "password is %d characters long\n",
-			(int) PCU.password_len);
+	IMAP_DM(pc, DEBUG_INFO, "password is %zu characters long\n",
+			PCU.password_len);
 	IMAP_DM(pc, DEBUG_INFO, "serverName= '%s'\n", PCU.serverName);
 	IMAP_DM(pc, DEBUG_INFO, "serverPath= '%s'\n", pc->path);
 	IMAP_DM(pc, DEBUG_INFO, "serverPort= '%d'\n", PCU.serverPort);
@@ -595,7 +605,7 @@ int imap4Create( /*@notnull@ */ Pop3 pc, const char *const str)
 	return 0;
 }
 
-static int authenticate_plaintext( /*@notnull@ */ Pop3 pc,
+static int authenticate_plaintext( /*@notnull@ */ Pop3 *pc,
 								  struct connection_state *scs,
 								  const char *capabilities)
 {
@@ -644,7 +654,7 @@ static int authenticate_plaintext( /*@notnull@ */ Pop3 pc,
 
 #ifdef HAVE_GCRYPT_H
 static int
-authenticate_md5(Pop3 pc,
+authenticate_md5(Pop3 *pc,
 				 struct connection_state *scs, const char *capabilities)
 {
 	char buf[BUF_SIZE];
@@ -707,7 +717,7 @@ authenticate_md5(Pop3 pc,
 }
 #endif
 
-static void ask_user_for_password( /*@notnull@ */ Pop3 pc, int bFlushCache)
+static void ask_user_for_password( /*@notnull@ */ Pop3 *pc, int bFlushCache)
 {
 	/* see if we already have a password, as provided in the config file, or
 	   already requested from the user. */

@@ -46,22 +46,22 @@
 #define ENFROB(x)
 #endif
 
-typedef struct password_binding_struct {
-	struct password_binding_struct *next;
+typedef struct password_binding_ {
+	struct password_binding_ *next;
 	char user[BUF_SMALL];
 	char server[BUF_BIG];
 	char password[BUF_SMALL];	/* may be frobnicated */
-	unsigned char password_len;	/* frobnicated *'s are nulls */
-} *password_binding;
+	size_t password_len;		/* frobnicated *'s are nulls */
+} password_binding;
 
-static password_binding pass_list = NULL;
+static password_binding *pass_list;
 
 /* verifies that askpass_fname, if it has no spaces, exists as
    a file, is owned by the user or by root, and is not world
    writeable.   This is just a sanity check, and is not intended
    to ensure the integrity of the password-asking program. */
 /* would be static, but used in test_wmbiff */
-int permissions_ok(Pop3 pc, const char *askpass_fname)
+int permissions_ok(Pop3 *pc, const char *askpass_fname)
 {
 	struct stat st;
 	if (index(askpass_fname, ' ')) {
@@ -110,11 +110,10 @@ int permissions_ok(Pop3 pc, const char *askpass_fname)
 #include<Security/Security.h>
 
 static void
-get_password_from_keychain(Pop3 pc, const char *username,
+get_password_from_keychain(Pop3 *pc, const char *username,
 						   const char *servername,
 						   /*@out@ */ char *password,
-						   /*@out@ */
-						   unsigned char *password_len)
+						   /*@out@ */ size_t *password_len)
 {
 	SecKeychainRef kc;
 	OSStatus rc;
@@ -145,7 +144,7 @@ get_password_from_keychain(Pop3 pc, const char *username,
 		*password_len = pwdlen;
 	} else {
 		DM(pc, DEBUG_ERROR,
-		   "passmgr: warning: your password appears longer (%lu) than expected (%d)\n",
+		   "passmgr: warning: your password appears longer (%zu) than expected (%zu)\n",
 		   strlen(secpwd), *password_len - 1);
 	}
 	rc = SecKeychainItemFreeContent(NULL, secpwd);
@@ -155,11 +154,11 @@ get_password_from_keychain(Pop3 pc, const char *username,
 
 
 static void
-get_password_from_command(Pop3 pc, const char *username,
+get_password_from_command(Pop3 *pc, const char *username,
 						  const char *servername,
 						  /*@out@ */ char *password,
 						  /*@out@ */
-						  unsigned char *password_len)
+						  size_t *password_len)
 {
 	password[*password_len - 1] = '\0';
 	password[0] = '\0';
@@ -195,8 +194,8 @@ get_password_from_command(Pop3 pc, const char *username,
 		strncpy(password, password_ptr, *password_len);
 		if (password[*password_len - 1] != '\0') {
 			DM(pc, DEBUG_ERROR,
-			   "passmgr: warning: your password appears longer (%lu) than expected (%d)\n",
-			   (unsigned long) strlen(password_ptr), *password_len - 1);
+			   "passmgr: warning: your password appears longer (%zu) than expected (%zu)\n",
+			   strlen(password_ptr), *password_len - 1);
 		}
 		free(password_ptr);
 		password[*password_len - 1] = '\0';
@@ -209,20 +208,20 @@ get_password_from_command(Pop3 pc, const char *username,
 	}
 }
 
-char *passwordFor(const char *username,
-				  const char *servername, Pop3 pc, int bFlushCache)
+char *passwordFor(const char *username, const char *servername, Pop3 *pc,
+				  int bFlushCache)
 {
 
-	password_binding p;
+	password_binding *p;
+	int p_allocked = 0;
 
 	assert(username != NULL);
 	assert(username[0] != '\0');
 
 	/* find the binding */
 	for (p = pass_list;
-		 p != NULL
-		 && (strcmp(username, p->user) != 0 ||
-			 strcmp(servername, p->server) != 0); p = p->next);
+		 p != NULL && (strcmp(username, p->user) != 0 ||
+					   strcmp(servername, p->server) != 0); p = p->next);
 
 	/* if so, return the password */
 	if (p != NULL) {
@@ -230,20 +229,22 @@ char *passwordFor(const char *username,
 			if (bFlushCache == 0) {
 				char *ret = strdup(p->password);
 #ifdef HAVE_MEMFROB
-				unsigned short ret_len = p->password_len;
+				size_t ret_len = p->password_len;
 				DEFROB(ret);
 #endif
 				return (ret);
 			}
 			/* else fall through, overwrite */
-		} else if (pc) {
-			/* if we've asked, but received nothing, disable this box */
-			pc->checkMail = NULL;
+		} else {
+			if (pc) {
+				/* if we've asked, but received nothing, disable this box */
+				pc->checkMail = NULL;
+			}
 			return (NULL);
 		}
 	} else {
-		p = (password_binding)
-			malloc(sizeof(struct password_binding_struct));
+		p = malloc(sizeof *p);
+		p_allocked = 1;
 	}
 
 	/* else, try to get it. */
@@ -285,6 +286,9 @@ char *passwordFor(const char *username,
 		return (retval);
 	}
 
+	if (p_allocked) {
+		free(p);
+	}
 	return (NULL);
 }
 

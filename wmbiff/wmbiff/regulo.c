@@ -16,13 +16,15 @@
 
 /* callbacks specified by the calling function to extract
    substrings to values. */
-void regulo_atoi(void *dest_int, const char *source)
+void regulo_atoi(void *dest, const char *source)
 {
+	int *dest_int = dest;
+
 	/* skip any leading non-digit */
 	while (*source != '\0' && !isdigit(*source))
 		source++;
 
-	*(int *) dest_int = atoi(source);
+	*dest_int = atoi(source);
 }
 
 void regulo_strcpy(void *dest, const char *source)
@@ -32,24 +34,26 @@ void regulo_strcpy(void *dest, const char *source)
 
 void regulo_strcpy_tolower(void *dest, const char *source)
 {
-	unsigned int i;
+	char *dest_str = dest;
+	size_t i;
+
 	for (i = 0; i < strlen(source); i++) {
-		((char *) dest)[i] = tolower(source[i]);
+		dest_str[i] = tolower(source[i]);
 	}
-	((char *) dest)[i] = '\0';
+	dest_str[i] = '\0';
 }
 
 void regulo_strcpy_skip1(void *dest, const char *source)
 {
-	strcpy((char *) dest, source + 1);
+	strcpy(dest, source + 1);
 }
 
 #ifdef USE_GNU_REGEX
 /* deprecated as unportable */
 
 int
-regulo_match(const char *regex,
-			 const char *string, const struct regulo *instructions)
+regulo_match(const char *regex, const char *string,
+	     struct regulo *instructions)
 {
 	struct re_registers regs;
 	int ret;
@@ -104,8 +108,8 @@ int compile_and_match_regex_posix(const char *regex, const char *str,	/*@out@ */
 
 
 int
-regulo_match(const char *regex,
-			 const char *string, const struct regulo *instructions)
+regulo_match(const char *regex, const char *string,
+	     struct regulo *instructions)
 {
 	regmatch_t regs[20];
 	int ret;

@@ -1,0 +1,65 @@
+wmcube 1.0.2 (February 28, 2016):
+	* Two following patches by Douglas Torrance: avoiding
+	  hyphen-used-as-minus-sign Lintian warning as well as removing
+	  inline keywords and allowing builds using gcc5.
+
+wmcube 1.0.1 (February 19, 2015):
+	* Applied a few patches written by Doug Torrance (see: THANKS
+	  file).
+	* Updated Makefile (Makefile.LINUX) file according to the
+	  modifications by Doug Torrance.
+	* Added three new objects -- X-lines.wmc, X-planes.wmc, and
+	  beryllium.wmc -- all of them recommended by Doug Torrance.
+	* Added updated version of wmcube.1 manual page borrowed from
+	  Debian.
+	* Added THANKS file.
+
+wmcube 1.0.0 (November 26, 2014):
+	* Default color scheme changed to the gray one.
+	* Added red, green, and blue color schemes (you may combine them
+	  in order to get cyan, magenta, and yellow ones).
+	* Added smooth font.
+	* Program installs the plugins in /usr/share/wmcube directory.
+	* Added the recognition of the plugins directory.
+	* Added three versions of Slackware Linux logo.
+	* Updated Makefiles.
+	* Updated the documentation.
+	* The name of the program changed from wmCube to wmcube.
+	* Licence changed to GNU GPL v. 3.
+	* The program since this version is maintained by Cezary M. Kruk.
+
+wmCube 0.98:
+	* Added solid flat-shading to 3d-engine.
+	* New tag in object-files (WMCUBE_PLANES) for solid objects.
+
+wmCube 0.97:
+	* NetBSD support.
+	* New improved automatic scaling of objects.
+	* Click cpu-load to hide/reveal usage.
+	* More bundled objects.
+	* Bugfixes in object-loading.
+	* Bugfixes in intro-sequence.
+	* Bugfixes in Linux SMP.
+	* Removed scanning directory for objects in Solaris (doesnt work).
+
+wmCube 0.96:
+	* Solaris (Sparc/x86) support.
+	* OpenBSD support.
+	* FreeBSD support.
+	* More bundled objects.
+	* Possibility to change object at run-time by clicking the app
+	  (scans the specified directory for objects).
+
+wmCube 0.95:
+	* You can now design and use other objects than the default cube.
+	* SMP-support: Commandline option to choose which cpu to monitor.
+	* Commandline option to leave out "nice" processes when calculating
+	  cpu-load (thanks to Thorsten Jens).
+	* Commandline option to invert the relationship between rotation-
+	  speed and cpu-load.
+	* Commandline option not to display cpu-load.
+	* Improvements in the cpu-load calculation (thanks to Jakob Borg).
+
+wmCube 0.90:
+	* Initial release.
+

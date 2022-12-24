@@ -2,8 +2,9 @@
 // config.h
 // configuration file parser, part of wmail
 //
-// Copyright 2000~2002, Sven Geisenhainer <sveng@informatik.uni-jena.de>.
-// All rights reserved.
+// Copyright 2000-2002, Sven Geisenhainer <sveng@informatik.uni-jena.de>.
+// Copyright 2016-2017, Doug Torrance <dtorrance@piedmont.edu>.
+// Copyright 2019, Jeremy Sowden <jeremy@azazel.net>.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
@@ -48,25 +49,24 @@ enum {
 
 // flags to mark used cmdline options
 enum {
-	CL_DISPLAY             = 1<<0,
-	CL_MAILBOX             = 1<<1,
-	CL_RUNCMD              = 1<<2,
-	CL_SYMBOLCOLOR         = 1<<3,
-	CL_FONTCOLOR           = 1<<4,
-	CL_BACKCOLOR           = 1<<5,
-	CL_OFFLIGHTCOLOR       = 1<<6,
-	CL_BACKGROUNDCOLOR     = 1<<7,
-	CL_CHECKSUMFILENAME    = 1<<8,
-	CL_CHECKINTERVAL       = 1<<9,
-	CL_FPS                 = 1<<10,
-	CL_NEWMAILONLY         = 1<<11,
-	CL_NOSHAPE             = 1<<12,
-	CL_TICKERMODE          = 1<<13,
-	CL_SKIPNAMES           = 1<<14,
-	CL_CMDONMAIL           = 1<<15,
-	CL_CONSIDERSTATUSFIELD = 1<<16,
-	CL_READSTATUS          = 1<<17,
-	CL_USEX11FONT          = 1<<18
+    CL_DISPLAY             = 1 <<  0,
+    CL_MAILBOX             = 1 <<  1,
+    CL_RUNCMD              = 1 <<  2,
+    CL_SYMBOLCOLOR         = 1 <<  3,
+    CL_FONTCOLOR           = 1 <<  4,
+    CL_BACKCOLOR           = 1 <<  5,
+    CL_OFFLIGHTCOLOR       = 1 <<  6,
+    CL_BACKGROUNDCOLOR     = 1 <<  7,
+    CL_CHECKINTERVAL       = 1 <<  8,
+    CL_FPS                 = 1 <<  9,
+    CL_NEWMAILONLY         = 1 << 10,
+    CL_NOSHAPE             = 1 << 11,
+    CL_TICKERMODE          = 1 << 12,
+    CL_CMDONMAIL           = 1 << 13,
+    CL_CONSIDERSTATUSFIELD = 1 << 14,
+    CL_READSTATUS          = 1 << 15,
+    CL_USEX11FONT          = 1 << 16,
+    CL_CONFIGFILE          = 1 << 17
 };
 
 typedef struct _config_t {
@@ -87,11 +87,11 @@ typedef struct _config_t {
     char **skipNames;         // sender-names that wmail has to skip
     char *cmdOnMail;          // command to execute when a new mail has received
     bool considerStatusField;  // use the status-field of the mail-header to determine its read-status
-	char *readStatus;         // status field content that indicates read mails ("O" for netscape, "ro" for pine etc.)
-	char *useX11Font;         // X11 font to render the ticker (NULL -> fallback to buildin font)
+    char *readStatus;         // status field content that indicates read mails ("O" for netscape, "ro" for pine etc.)
+    char *useX11Font;         // X11 font to render the ticker (NULL -> fallback to buildin font)
     // ---------------------- //
     int colorsUsed;           // used (malloced) color-names
-	int givenOptions;         // bitfield flags all options specified on the cmd-line
+    int givenOptions;         // bitfield flags all options specified on the cmd-line
 } config_t;
 
 
@@ -99,6 +99,8 @@ typedef struct _config_t {
 extern config_t config;
 
 // config manipulation functions
-void ReadConfigFile( bool resetConfigStrings );
+void ReadConfigFile( const char *configFile, bool resetConfigStrings );
+
+void ResetConfigStrings( void );
 
 #endif

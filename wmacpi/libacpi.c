@@ -13,12 +13,24 @@
 
 extern char *state[];
 
+battery_t batteries[MAXBATT];
+int verbosity;
+
 #define PROC_DATA_SOURCE    0
 #define SYSFS_DATA_SOURCE   1
 static int data_source;
 
 /* local proto */
 int acpi_get_design_cap(int batt);
+
+static int
+cmpstr (const void *va, const void *vb)
+{
+    const char *a = *(const char **) va;
+    const char *b = *(const char **) vb;
+
+    return strcmp (a, b);
+}
 
 static int read_sysfs_file(char *node, char *prop, char *buf, size_t buflen)
 {
@@ -60,7 +72,7 @@ static int sysfs_init_batteries(global_t *globals)
     char *name;
     char *names[MAXBATT];
     char ps_type[16];
-    int i, j;
+    int i;
 
     /* now enumerate batteries */
     globals->battery_count = 0;
@@ -93,25 +105,13 @@ static int sysfs_init_batteries(global_t *globals)
     }
     closedir(battdir);
 
-    /* A nice quick insertion sort, ala CLR. */
-    {
-	char *tmp1, *tmp2;
-
-	for (i = 1; i < globals->battery_count; i++) {
-	    tmp1 = names[i];
-	    j = i - 1;
-	    while ((j >= 0) && ((strcmp(tmp1, names[j])) < 0)) {
-		tmp2 = names[j+1];
-		names[j+1] = names[j];
-		names[j] = tmp2;
-	    }
-	}
-    }
+    qsort(names, globals->battery_count, sizeof *names, cmpstr);
 
     for (i = 0; i < globals->battery_count; i++) {
 	snprintf(batteries[i].name, MAX_NAME, "%s", names[i]);
 	pdebug("battery detected at /sys/class/power_supply/%s\n", batteries[i].name);
 	pinfo("found battery %s\n", names[i]);
+	free(names[i]);
 
 	if (read_sysfs_file(batteries[i].name, "energy_now", ps_type, sizeof(ps_type)) == 0)
 	    batteries[i].sysfs_capa_mode = SYSFS_CAPA_ENERGY;
@@ -140,7 +140,7 @@ static int procfs_init_batteries(global_t *globals)
     struct dirent *batt;
     char *name;
     char *names[MAXBATT];
-    int i, j;
+    int i;
 
     /* now enumerate batteries */
     globals->battery_count = 0;
@@ -167,20 +167,7 @@ static int procfs_init_batteries(global_t *globals)
     }
     closedir(battdir);
 
-    /* A nice quick insertion sort, ala CLR. */
-    {
-	char *tmp1, *tmp2;
-
-	for (i = 1; i < globals->battery_count; i++) {
-	    tmp1 = names[i];
-	    j = i - 1;
-	    while ((j >= 0) && ((strcmp(tmp1, names[j])) < 0)) {
-		tmp2 = names[j+1];
-		names[j+1] = names[j];
-		names[j] = tmp2;
-	    }
-	}
-    }
+    qsort(names, globals->battery_count, sizeof *names, cmpstr);
 
     for (i = 0; i < globals->battery_count; i++) {
 	snprintf(batteries[i].name, MAX_NAME, "%s", names[i]);
@@ -190,6 +177,7 @@ static int procfs_init_batteries(global_t *globals)
 		 "/proc/acpi/battery/%s/state", names[i]);
 	pdebug("battery detected at %s\n", batteries[i].info_file);
 	pinfo("found battery %s\n", names[i]);
+	free(names[i]);
     }
 
     /* tell user some info */
@@ -234,23 +222,19 @@ static int sysfs_init_ac_adapters(global_t *globals)
     }
     name = NULL;
     while ((adapter = readdir(acdir)) != NULL) {
-	name = adapter->d_name;
 
-	if (name[0] == '.') {
-	  name = NULL;
+	if (adapter->d_name[0] == '.') {
 	  continue;
 	}
 
-	if (read_sysfs_file(name, "type", ps_type, sizeof(ps_type)) < 0) {
-	  name = NULL;
+	if (read_sysfs_file(adapter->d_name, "type", ps_type, sizeof(ps_type)) < 0) {
 	  continue;
 	}
 
 	if (strncmp("Mains", ps_type, 5) == 0) {
-	  pdebug("found adapter %s\n", name);
+	  pdebug("found adapter %s\n", adapter->d_name);
+	  name = strdup(adapter->d_name);
 	  break;
-	} else {
-	  name = NULL;
 	}
     }
     closedir(acdir);
@@ -261,7 +245,7 @@ static int sysfs_init_ac_adapters(global_t *globals)
     }
 
     /* we'll just use the first adapter we find ... */
-    ap->name = strdup(name);
+    ap->name = name;
     pinfo("libacpi: found ac adapter %s\n", ap->name);
 
     return 0;
@@ -291,10 +275,10 @@ static int procfs_init_ac_adapters(global_t *globals)
 	    continue;
 	pdebug("found adapter %s\n", name);
     }
+    ap->name = strdup(name);
     closedir(acdir);
     /* we /should/ only see one filename other than . and .. so
      * we'll just use the last value name acquires . . . */
-    ap->name = strdup(name);
     snprintf(ap->state_file, MAX_NAME, "/proc/acpi/ac_adapter/%s/state",
 	     ap->name);
     pinfo("libacpi: found ac adapter %s\n", ap->name);
@@ -321,7 +305,7 @@ int reinit_ac_adapters(global_t *globals)
 int power_init(global_t *globals)
 {
     FILE *acpi;
-    char buf[4096];
+    char buf[4096] = "";
     int acpi_ver = 0;
     int retval;
     size_t buflen;
@@ -383,6 +367,7 @@ int power_reinit(global_t *globals)
     if (!(retval = reinit_batteries(globals)))
 	retval = reinit_ac_adapters(globals);
 
+    fclose (acpi);
     return retval;
 }
 
